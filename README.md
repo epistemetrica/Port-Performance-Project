@@ -12,7 +12,9 @@ Data for this project come from various sources, including:
 
 - Vessel position, indentification, and status data from the [NOAA/BOEM/USCG Marine Cadastre](https://hub.marinecadastre.gov/pages/about) AIS database. 
 - [Port locations](https://geodata.bts.gov/datasets/usdot::principal-ports/explore?location=20.769635%2C73.193702%2C2.00) from the Bureau of Transportation Statistics. 
-- [Dock and anchorage](https://geospatial-usace.opendata.arcgis.com/datasets/0f4b16ba76e542e888343907eba91aea_0/explore?location=47.571978%2C-122.325576%2C12.73) locations and descriptions from the US Army Corp of Engineers. 
+- [Dock and anchorage](https://geospatial-usace.opendata.arcgis.com/datasets/0f4b16ba76e542e888343907eba91aea_0/explore?location=47.571978%2C-122.325576%2C12.73) locations and descriptions from the US Army Corp of Engineers.
+
+NOTE Data files are note stored on the repo. 
 
 ## Files
 
