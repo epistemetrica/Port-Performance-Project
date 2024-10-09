@@ -33,3 +33,4 @@ The following libraries are used:
 - pandas 2.1.3
 - polars 1.1.0
 - scipy 1.11.4
+- geopandas 0.14.1
