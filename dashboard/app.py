@@ -12,8 +12,8 @@ from dash.dependencies import Input, Output
 #load data
 df = pl.read_parquet('../port data/dashboard/main.parquet')
 #init handy variables
-earliest_date = df['time'].min()
-latest_date = df['time'].max()
+earliest_date = df['time'].min().date()
+latest_date = df['time'].max().date()
 
 #define port stats function
 def port_stats(df, start_date=earliest_date, end_date=latest_date):
@@ -91,26 +91,34 @@ def port_stats(df, start_date=earliest_date, end_date=latest_date):
 app = dash.Dash()
 #layout
 app.layout = (
-    html.Div(
-        children=[
-            #set title of app
-            html.H1('Port Performance Dashboard (alpha)'),
-            html.H3('Select Date Range'),
-            dcc.DatePickerRange(
-                id='date_range',
-                #set initial 
-                initial_visible_month=str(latest_date - relativedelta(months=-12)),
-                start_date=latest_date + relativedelta(months=-12),
-                end_date=latest_date
-            ),
-            dcc.Graph(id='map_fig')
-        ]
-    )
+    html.Div([
+        #set title of app
+        html.H1('Port Performance Dashboard (alpha)'),
+        html.H3('Select Date Range'),
+        dcc.DatePickerRange(
+            id='date_range',
+            min_date_allowed=earliest_date,
+            max_date_allowed=latest_date,
+            initial_visible_month=latest_date,
+            start_date=latest_date + relativedelta(months=-12),
+            end_date=latest_date,
+            clearable=True
+        ),
+        html.Div(
+            children=[
+                dcc.Graph(id='map_fig_berth', 
+                    style={'display':'inline-block', 'width':'50%'}),
+                dcc.Graph(id='map_fig_anchor', 
+                            style={'display':'inline-block', 'width':'50%'})
+            ]
+        )
+    ])
 )
 
 #decorate with DatePickerRange component
 @app.callback(
-    Output('map_fig', 'figure'),
+    Output('map_fig_berth', 'figure'),
+    Output('map_fig_anchor', 'figure'),
     Input('date_range', 'start_date'),
     Input('date_range', 'end_date')
 )
@@ -129,8 +137,9 @@ def update_map(start_date, end_date):
         data = port_stats(data, end_date=end_date.date())
     else:
         data = port_stats(data)
-    #create map figure
-    fig = px.scatter_geo(
+    
+    #create map figure for berths
+    fig1 = px.scatter_geo(
         data,
         lon='port_lon',
         lat='port_lat',
@@ -139,20 +148,16 @@ def update_map(start_date, end_date):
         range_color=[0,50],
         hover_name='port_name',
         size_max=20,
-        title='Average visits per month & Median Hours at Berth',
+        title='Average Visits per Month & Median Hours at Berth',
         color_continuous_scale=px.colors.sequential.Viridis,
-        width=1000,
-        height=600,
         labels={
             'time_at_berth_median':'Median Hours at Berth'
         }
     )
-
     # Fit the view to ports
-    fig.update_geos(fitbounds="locations")
-
+    fig1.update_geos(fitbounds="locations")
     # Add footnote using add_annotation
-    fig.add_annotation(
+    fig1.add_annotation(
         text="Note: Circle size corresponds to average vessel visits per month",  # Footnote text
         xref="paper", yref="paper",  # Position relative to the plot area
         x=0, y=0-0.05,  # Adjust to footnote position
@@ -160,7 +165,36 @@ def update_map(start_date, end_date):
         font=dict(size=14, color="black"),  # Customize the font style
         align="left"
     )
-    return fig
+
+    #create map figure for anchors
+    fig2 = px.scatter_geo(
+        data,
+        lon='port_lon',
+        lat='port_lat',
+        size='visits_avg',
+        color='time_at_anchor_median',
+        range_color=[0,50],
+        hover_name='port_name',
+        size_max=20,
+        title='Average Visits per Month & Median Hours at Anchor',
+        color_continuous_scale=px.colors.sequential.Viridis,
+        labels={
+            'time_at_anchor_median':'Median Hours at Anchor'
+        }
+    )
+    # Fit the view to ports
+    fig2.update_geos(fitbounds="locations")
+    # Add footnote using add_annotation
+    fig2.add_annotation(
+        text="Note: Circle size corresponds to average vessel visits per month",  # Footnote text
+        xref="paper", yref="paper",  # Position relative to the plot area
+        x=0, y=0-0.05,  # Adjust to footnote position
+        showarrow=False,  # No arrow, just text
+        font=dict(size=14, color="black"),  # Customize the font style
+        align="left"
+    )
+
+    return fig1, fig2
 
 #run
 if __name__ == '__main__':
